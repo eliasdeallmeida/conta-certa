@@ -17,7 +17,7 @@ export default function Login() {
     }
 
     try {
-      const response = await api.post("/token", { email, password: password });
+      const response = await api.post("token/", { email, password: password });
       await AsyncStorage.setItem("accessToken", response.data.access);
       await AsyncStorage.setItem("refreshToken", response.data.refresh);
       replaceToHome();
