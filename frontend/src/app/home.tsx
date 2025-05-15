@@ -1,4 +1,3 @@
-import React from "react";
 import {
   View,
   Text,
@@ -6,16 +5,14 @@ import {
   TouchableOpacity,
   StatusBar,
 } from "react-native";
+import { replaceToLogin } from "./utils/navigation";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
 
 export default function Home() {
-  const router = useRouter();
-
   const handleLogout = async () => {
     await AsyncStorage.removeItem("accessToken");
     await AsyncStorage.removeItem("refreshToken");
-    router.replace("/login");
+    replaceToLogin();
   };
 
   return (

@@ -1,45 +1,36 @@
-import React, { useState } from "react";
-import {
-  Text,
-  StyleSheet,
-  Alert,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
-} from "react-native";
-import { useRouter } from "expo-router";
-import Logo from "../../components/Logo";
+import { useState } from "react";
+import { Text, StyleSheet, Alert, View, TouchableOpacity } from "react-native";
+import { goToLogin, replaceToLogin } from "../utils/navigation";
 import InputField from "../../components/InputField";
 import ButtonPrimary from "../../components/ButtonPrimary";
 import axios from "axios";
 
 export default function Register() {
-  const router = useRouter();
-  const [nome, setNome] = useState("");
-  const [usuario, setUsuario] = useState("");
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-  const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleCadastro = async () => {
-    if (!nome || !usuario || !email || !senha || !confirmarSenha) {
+  const handleRegister = async () => {
+    if (!name || !username || !email || !password || !confirmPassword) {
       Alert.alert("Erro", "Preencha todos os campos");
       return;
     }
-    if (senha !== confirmarSenha) {
+    if (password !== confirmPassword) {
       Alert.alert("Erro", "As senhas não coincidem");
       return;
     }
     try {
       await axios.post("http://192.168.100.26:8000/api/user/register", {
-        name: nome,
-        username: usuario,
+        name: name,
+        username: username,
         email: email,
-        password: senha,
-        confirm_password: confirmarSenha,
+        password: password,
+        confirm_password: confirmPassword,
       });
       Alert.alert("Sucesso", "Usuário cadastrado com sucesso!");
-      router.replace("/auth/login");
+      replaceToLogin();
     } catch (error) {
       console.error("Erro no cadastro:", error);
       Alert.alert(
@@ -50,20 +41,18 @@ export default function Register() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <Logo />
+    <View>
       <Text style={styles.title}>Cadastro</Text>
       <InputField
         label="Nome"
-        value={nome}
-        onChangeText={setNome}
+        value={name}
+        onChangeText={setName}
         placeholder="Informe seu nome completo"
       />
       <InputField
         label="Usuário"
-        value={usuario}
-        onChangeText={setUsuario}
+        value={username}
+        onChangeText={setUsername}
         placeholder="Informe seu nome de usuário"
       />
       <InputField
@@ -75,32 +64,27 @@ export default function Register() {
       />
       <InputField
         label="Senha"
-        value={senha}
-        onChangeText={setSenha}
+        value={password}
+        onChangeText={setPassword}
         placeholder="Informe sua senha"
         secureTextEntry
       />
       <InputField
         label="Confirmar Senha"
-        value={confirmarSenha}
-        onChangeText={setConfirmarSenha}
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
         placeholder="Informe novamente sua senha"
         secureTextEntry
       />
-      <ButtonPrimary title="Cadastrar" onPress={handleCadastro} />
-      <TouchableOpacity onPress={() => router.push("/auth/login")}>
+      <ButtonPrimary title="Cadastrar" onPress={handleRegister} />
+      <TouchableOpacity onPress={goToLogin}>
         <Text style={styles.link}>Já tem uma conta? Efetue login</Text>
       </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    padding: 20,
-    backgroundColor: "#fff",
-  },
   title: {
     fontSize: 24,
     fontWeight: "bold",

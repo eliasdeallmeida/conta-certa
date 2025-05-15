@@ -1,13 +1,10 @@
-import React from "react";
 import { View, Text, StyleSheet, StatusBar } from "react-native";
-import { useRouter } from "expo-router";
+import { goToLogin, goToRegister } from "./utils/navigation";
 import Logo from "../components/Logo";
 import ButtonPrimary from "../components/ButtonPrimary";
 import ButtonSecondary from "../components/ButtonSecondary";
 
 export default function Index() {
-  const router = useRouter();
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
@@ -16,14 +13,8 @@ export default function Index() {
       <Text style={styles.subtitle}>
         Gerencie suas finanças de forma simples
       </Text>
-      <ButtonPrimary
-        title="Entrar"
-        onPress={() => router.push("/auth/login")}
-      />
-      <ButtonSecondary
-        title="Criar conta"
-        onPress={() => router.push("/auth/register")}
-      />
+      <ButtonPrimary title="Entrar" onPress={goToLogin} />
+      <ButtonSecondary title="Criar conta" onPress={goToRegister} />
     </View>
   );
 }
