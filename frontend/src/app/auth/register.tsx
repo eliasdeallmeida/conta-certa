@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Text, StyleSheet, Alert, View, TouchableOpacity } from "react-native";
-import { goToLogin, replaceToLogin } from "../utils/navigation";
+import { goToLogin, replaceToLogin } from "../../utils/navigation";
 import InputField from "../../components/InputField";
 import ButtonPrimary from "../../components/ButtonPrimary";
 import axios from "axios";

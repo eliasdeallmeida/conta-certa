@@ -10,7 +10,7 @@ export function goToRegister() {
 }
 
 export function goToHome() {
-  router.push("/home");
+  router.push("/tabs/home");
 }
 
 export function goBack() {
@@ -23,5 +23,5 @@ export function replaceToLogin() {
 }
 
 export function replaceToHome() {
-  router.replace("/home");
+  router.replace("/tabs/home");
 }

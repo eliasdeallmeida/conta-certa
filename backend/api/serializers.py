@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, Category, Transaction
+
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(label='Senha', write_only=True)
@@ -24,3 +25,26 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
+        read_only_fields = ['user']
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source='category.name', read_only=True)
+
+    class Meta:
+        model = Transaction
+        fields = [
+            "id",
+            "description",
+            "value",
+            "date",
+            "transaction_type",
+            "category",       # envia/recebe o ID da categoria
+            "category_name",  # exibe o nome da categoria
+        ]

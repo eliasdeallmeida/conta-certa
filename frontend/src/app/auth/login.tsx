@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { goToRegister, replaceToHome } from "../utils/navigation";
+import { goToRegister, replaceToHome } from "../../utils/navigation";
 import api from "../../services/axios";
 import ButtonPrimary from "../../components/ButtonPrimary";
 import InputField from "../../components/InputField";

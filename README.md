@@ -43,3 +43,14 @@ npx expo install @react-navigation/native @react-navigation/native-stack
 
 ## Instalar axios e async storage
 npm install axios @react-native-async-storage/async-storage
+
+
+## Instalar Expo Router
+npx expo install expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar
+
+
+## Instalar React Native Picker
+npm i @react-native-picker/picker
+
+## Instalar React Native Date Time Picker
+npm install @react-native-community/datetimepicker

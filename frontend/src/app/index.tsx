@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, StatusBar } from "react-native";
-import { goToLogin, goToRegister } from "./utils/navigation";
+import { goToLogin, goToRegister } from "../utils/navigation";
 import Logo from "../components/Logo";
 import ButtonPrimary from "../components/ButtonPrimary";
 import ButtonSecondary from "../components/ButtonSecondary";
