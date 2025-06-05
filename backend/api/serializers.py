@@ -33,6 +33,12 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['user']
 
+    def validate_name(self, value):
+        user = self.context['request'].user
+        if Category.objects.filter(user=user, name=value).exists():
+            raise serializers.ValidationError('Já existe uma categoria com este nome para este usuário.')
+        return value
+
 
 class TransactionSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
@@ -48,3 +54,20 @@ class TransactionSerializer(serializers.ModelSerializer):
             "category",       # envia/recebe o ID da categoria
             "category_name",  # exibe o nome da categoria
         ]
+
+    def validate_value(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('O valor deve ser positivo.')
+        return value
+
+    def validate_category(self, value):
+        user = self.context['request'].user
+        if value and value.user != user:
+            raise serializers.ValidationError('Categoria não pertence ao usuário autenticado.')
+        return value
+
+    def validate_date(self, value):
+        from datetime import date
+        if value > date.today():
+            raise serializers.ValidationError('A data não pode ser futura.')
+        return value
