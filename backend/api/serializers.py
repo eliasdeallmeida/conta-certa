@@ -25,9 +25,9 @@ class UserSerializer(serializers.ModelSerializer):
             'name': {'label': 'Nome'}
         }
     
-    def validate_password(self, attrs):
+    def validate(self, attrs):
         """
-        Valida se as senhas coincidem.
+        Valida os dados do usuário.
         
         Parâmetros:
             attrs (dict): Dados do usuário.
