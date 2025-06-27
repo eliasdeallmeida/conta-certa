@@ -11,6 +11,8 @@ import {
 import { useRouter } from "expo-router";
 import api from "../../../services/axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CategoryItem from "../../../components/CategoryItem";
+import ButtonPrimary from "../../../components/ButtonPrimary";
 
 export default function Categories() {
   const router = useRouter();
@@ -50,12 +52,10 @@ export default function Categories() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.addButton}
+      <ButtonPrimary
+        title={"+ Nova Categoria"}
         onPress={() => router.push("/tabs/categories/add")}
-      >
-        <Text style={styles.addButtonText}>+ Nova Categoria</Text>
-      </TouchableOpacity>
+      />
 
       {loading ? (
         <ActivityIndicator size="large" color="#167ec5" />
@@ -64,19 +64,11 @@ export default function Categories() {
           data={categories}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <View style={styles.item}>
-              <Text style={styles.name}>{item.name}</Text>
-              <View style={styles.actions}>
-                <TouchableOpacity
-                  onPress={() => router.push(`/tabs/categories/${item.id}`)}
-                >
-                  <Text style={styles.edit}>Editar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => deleteCategory(item.id)}>
-                  <Text style={styles.delete}>Excluir</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+            <CategoryItem
+              name={item.name}
+              onEdit={() => router.push(`/tabs/categories/${item.id}`)}
+              onDelete={() => deleteCategory(item.id)}
+            />
           )}
         />
       )}

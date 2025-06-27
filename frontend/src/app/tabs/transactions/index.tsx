@@ -10,6 +10,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import api from "../../../services/axios";
 import { router } from "expo-router";
+import TransactionItem from "../../../components/TransactionItem";
+import ButtonPrimary from "../../../components/ButtonPrimary";
 
 interface Transaction {
   id: number;
@@ -62,48 +64,24 @@ export default function Transactions() {
   return (
     <View style={styles.container}>
       {/* <Text style={styles.title}>Transações</Text> */}
-      <TouchableOpacity
-        style={styles.addButton}
+      <ButtonPrimary
+        title="Nova Transação"
         onPress={() => router.push("/tabs/transactions/add")}
-      >
-        <Ionicons name="add-circle-outline" size={24} color="#fff" />
-        <Text style={styles.addText}>Nova Transação</Text>
-      </TouchableOpacity>
+      />
 
       <FlatList
         data={transactions}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.itemTitle}>{item.description}</Text>
-              <Text style={styles.details}>R$ {item.value}</Text>
-              <Text style={styles.details}>
-                {typeMap[item.transaction_type] || item.transaction_type}
-              </Text>
-              <Text style={styles.details}>
-                {new Date(item.date).toLocaleDateString("pt-BR")}
-              </Text>
-              {/* {item.category ? (
-                <Text style={styles.details}>{item.category}</Text>
-              ) : (
-                <Text style={styles.details}>Sem categoria</Text>
-              )} */}
-              <Text style={styles.details}>
-                Categoria: {item.category_name || "Nenhuma"}
-              </Text>
-            </View>
-            <View style={styles.actions}>
-              <TouchableOpacity
-                onPress={() => router.push(`/tabs/transactions/${item.id}`)}
-              >
-                <Ionicons name="pencil" size={20} color="#167ec5" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDelete(item.id)}>
-                <Ionicons name="trash" size={20} color="red" />
-              </TouchableOpacity>
-            </View>
-          </View>
+          <TransactionItem
+            description={item.description}
+            value={`R$ ${item.value}`}
+            type={typeMap[item.transaction_type] || item.transaction_type}
+            date={new Date(item.date).toLocaleDateString("pt-BR")}
+            category={item.category_name || "Nenhuma"}
+            onEdit={() => router.push(`/tabs/transactions/${item.id}`)}
+            onDelete={() => handleDelete(item.id)}
+          />
         )}
       />
     </View>

@@ -13,6 +13,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../../../services/axios";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import InputField from "../../../components/InputField";
+import ButtonPrimary from "../../../components/ButtonPrimary";
 
 export default function AddTransaction() {
   const router = useRouter();
@@ -88,17 +90,15 @@ export default function AddTransaction() {
     <View style={styles.container}>
       {/* <Text style={styles.title}>Nova Transação</Text> */}
 
-      <Text style={styles.label}>Descrição</Text>
-      <TextInput
-        style={styles.input}
+      <InputField
+        label="Descrição"
         value={description}
         onChangeText={setDescription}
         placeholder="Ex: Mercado"
       />
 
-      <Text style={styles.label}>Valor</Text>
-      <TextInput
-        style={styles.input}
+      <InputField
+        label="Valor"
         value={value}
         onChangeText={(text) => {
           const clean = text.replace(/[^\d]/g, "");
@@ -106,7 +106,7 @@ export default function AddTransaction() {
           setValue(`R$ ${formatted}`);
         }}
         placeholder="Ex: R$ 500,00"
-        keyboardType="numeric"
+        keyboardType="default"
       />
 
       <Text style={styles.label}>Data</Text>
@@ -158,9 +158,7 @@ export default function AddTransaction() {
         </Picker>
       </View>
 
-      <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-        <Text style={styles.buttonText}>Adicionar Transação</Text>
-      </TouchableOpacity>
+      <ButtonPrimary title="Adicionar Transação" onPress={handleSubmit} />
     </View>
   );
 }

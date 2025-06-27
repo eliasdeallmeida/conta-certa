@@ -10,6 +10,8 @@ import {
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../../../services/axios";
+import InputField from "../../../components/InputField";
+import ButtonPrimary from "../../../components/ButtonPrimary";
 
 export default function AddCategory() {
   const [name, setName] = useState("");
@@ -37,16 +39,13 @@ export default function AddCategory() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Nome da Categoria</Text>
-      <TextInput
-        style={styles.input}
+      <InputField
+        label="Nome da Categoria"
         value={name}
         onChangeText={setName}
         placeholder="Ex: Alimentação"
       />
-      <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-        <Text style={styles.buttonText}>Adicionar</Text>
-      </TouchableOpacity>
+      <ButtonPrimary title="Adicionar" onPress={handleSubmit} />
     </View>
   );
 }

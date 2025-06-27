@@ -10,6 +10,8 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../../../services/axios";
+import InputField from "../../../components/InputField";
+import ButtonPrimary from "../../../components/ButtonPrimary";
 
 export default function EditCategory() {
   const { id } = useLocalSearchParams();
@@ -57,15 +59,13 @@ export default function EditCategory() {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Editar Categoria</Text>
-      <TextInput
-        style={styles.input}
+      <InputField
+        label="Nome da categoria"
         value={name}
         onChangeText={setName}
         placeholder="Nome da categoria"
       />
-      <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-        <Text style={styles.buttonText}>Salvar</Text>
-      </TouchableOpacity>
+      <ButtonPrimary title="Salvar" onPress={handleSubmit} />
     </View>
   );
 }

@@ -14,6 +14,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../../../services/axios";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import InputField from "../../../components/InputField";
+import ButtonPrimary from "../../../components/ButtonPrimary";
 
 export default function EditTransaction() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -115,23 +117,23 @@ export default function EditTransaction() {
     <View style={styles.container}>
       {/* <Text style={styles.title}>Editar Transação</Text> */}
 
-      <Text style={styles.label}>Descrição</Text>
-      <TextInput
-        style={styles.input}
+      <InputField
+        label="Descrição"
         value={description}
         onChangeText={setDescription}
+        placeholder="Descrição"
       />
 
-      <Text style={styles.label}>Valor</Text>
-      <TextInput
-        style={styles.input}
+      <InputField
+        label="Valor"
         value={value}
         onChangeText={(text) => {
           const clean = text.replace(/[^\d]/g, "");
           const formatted = (Number(clean) / 100).toFixed(2).replace(".", ",");
           setValue(`R$ ${formatted}`);
         }}
-        keyboardType="numeric"
+        placeholder="Ex: R$ 500,00"
+        keyboardType="default"
       />
 
       <Text style={styles.label}>Data</Text>
@@ -178,9 +180,7 @@ export default function EditTransaction() {
         </Picker>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleUpdate}>
-        <Text style={styles.buttonText}>Salvar Alterações</Text>
-      </TouchableOpacity>
+      <ButtonPrimary title="Salvar Alterações" onPress={handleUpdate} />
     </View>
   );
 }
