@@ -12,9 +12,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../../../services/axios";
 import InputField from "../../../components/InputField";
 import ButtonPrimary from "../../../components/ButtonPrimary";
+import ColorPicker from "../../../components/ColorPicker";
 
 export default function AddCategory() {
   const [name, setName] = useState("");
+  const [color, setColor] = useState("#000000");
   const router = useRouter();
 
   const handleSubmit = async () => {
@@ -27,7 +29,7 @@ export default function AddCategory() {
     try {
       await api.post(
         "categories/",
-        { name },
+        { name, color },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       router.push("/tabs/categories");
@@ -45,6 +47,7 @@ export default function AddCategory() {
         onChangeText={setName}
         placeholder="Ex: Alimentação"
       />
+      <ColorPicker value={color} onChange={setColor} />
       <ButtonPrimary title="Adicionar" onPress={handleSubmit} />
     </View>
   );

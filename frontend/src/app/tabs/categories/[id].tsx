@@ -12,11 +12,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../../../services/axios";
 import InputField from "../../../components/InputField";
 import ButtonPrimary from "../../../components/ButtonPrimary";
+import ColorPicker from "../../../components/ColorPicker";
 
 export default function EditCategory() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const [name, setName] = useState("");
+  const [color, setColor] = useState("#000000");
 
   useEffect(() => {
     const fetchCategory = async () => {
@@ -26,6 +28,7 @@ export default function EditCategory() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setName(response.data.name);
+        setColor(response.data.color);
       } catch (error) {
         console.error("Erro ao buscar categoria:", error);
         Alert.alert("Erro", "Categoria não encontrada");
@@ -46,7 +49,7 @@ export default function EditCategory() {
     try {
       await api.put(
         `categories/${id}/`,
-        { name },
+        { name, color },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       router.push("/tabs/categories");
@@ -65,6 +68,7 @@ export default function EditCategory() {
         onChangeText={setName}
         placeholder="Nome da categoria"
       />
+      <ColorPicker value={color} onChange={setColor} />
       <ButtonPrimary title="Salvar" onPress={handleSubmit} />
     </View>
   );

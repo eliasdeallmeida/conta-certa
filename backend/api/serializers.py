@@ -65,6 +65,7 @@ class CategorySerializer(serializers.ModelSerializer):
         id (int): ID da categoria.
         name (str): Nome da categoria.
         user (User): Usuário dono da categoria.
+        color (str): Cor da categoria.
     """
     class Meta:
         model = Category
@@ -73,17 +74,14 @@ class CategorySerializer(serializers.ModelSerializer):
 
     def validate_name(self, value):
         """
-        Valida se o nome da categoria já existe para o usuário autenticado.
-        
-        Parâmetros:
-            value (str): Nome da categoria.
-        Returns:
-            str: Nome validado.
-        Raises:
-            serializers.ValidationError: Se já existir categoria com esse nome para o usuário.
+        Valida se o nome da categoria já existe para o usuário autenticado, exceto para a própria categoria em edição.
         """
         user = self.context['request'].user
-        if Category.objects.filter(user=user, name=value).exists():
+        instance = getattr(self, 'instance', None)
+        qs = Category.objects.filter(user=user, name=value)
+        if instance is not None:
+            qs = qs.exclude(pk=instance.pk)
+        if qs.exists():
             raise serializers.ValidationError('Já existe uma categoria com este nome para este usuário.')
         return value
 
@@ -100,8 +98,10 @@ class TransactionSerializer(serializers.ModelSerializer):
         transaction_type (str): Tipo.
         category (int): ID da categoria.
         category_name (str): Nome da categoria (somente leitura).
+        category_color (str): Cor da categoria (somente leitura).
     """
     category_name = serializers.CharField(source='category.name', read_only=True)
+    category_color = serializers.CharField(source='category.color', read_only=True)
 
     class Meta:
         model = Transaction
@@ -113,6 +113,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             "transaction_type",
             "category",
             "category_name",
+            "category_color",
         ]
 
     def validate_value(self, value):

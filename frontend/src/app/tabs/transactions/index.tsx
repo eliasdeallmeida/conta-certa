@@ -21,6 +21,7 @@ interface Transaction {
   date: string;
   category: number | null; // ID da categoria
   category_name?: string; // Nome da categoria (read-only no serializer)
+  category_color?: string; // Cor da categoria
 }
 
 export default function Transactions() {
@@ -76,9 +77,10 @@ export default function Transactions() {
           <TransactionItem
             description={item.description}
             value={`R$ ${item.value}`}
-            type={typeMap[item.transaction_type] || item.transaction_type}
+            type={item.transaction_type === "expense" ? "Despesa" : "Receita"}
             date={new Date(item.date).toLocaleDateString("pt-BR")}
             category={item.category_name || "Nenhuma"}
+            categoryColor={item.category_color}
             onEdit={() => router.push(`/tabs/transactions/${item.id}`)}
             onDelete={() => handleDelete(item.id)}
           />

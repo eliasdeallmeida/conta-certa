@@ -42,6 +42,7 @@ class Category(models.Model):
     """
     name = models.CharField(max_length=100)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='categories')
+    color = models.CharField(max_length=7, default='#167ec5')
 
     def __str__(self):
         """
