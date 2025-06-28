@@ -24,7 +24,7 @@ export default function EditTransaction() {
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [transactionType, setTransactionType] = useState("expense");
-  const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
+  const [categoryId, setCategoryId] = useState<number | null>(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +53,12 @@ export default function EditTransaction() {
         //   (cat: any) => cat.name === categoryFromAPI
         // );
         // setCategoryId(matchedCategory?.id);
-        setCategories(catRes.data);
+        const categoriesArray =
+          catRes.data && Array.isArray(catRes.data.results)
+            ? catRes.data.results
+            : [];
+
+        setCategories(categoriesArray);
       } catch (error) {
         console.error("Erro ao carregar dados:", error.response?.data || error);
         Alert.alert("Erro", "Erro ao carregar dados da transação.");
@@ -82,7 +87,7 @@ export default function EditTransaction() {
           value: parseFloat(value.replace(/[^\d,]/g, "").replace(",", ".")),
           date: date.toISOString().split("T")[0],
           transaction_type: transactionType,
-          category: categoryId || null,
+          category: categoryId === null ? null : categoryId,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -173,7 +178,7 @@ export default function EditTransaction() {
           selectedValue={categoryId}
           onValueChange={(itemValue) => setCategoryId(itemValue)}
         >
-          <Picker.Item label="Nenhuma" value={undefined} />
+          <Picker.Item label="Nenhuma" value={null} />
           {categories.map((cat: any) => (
             <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
           ))}

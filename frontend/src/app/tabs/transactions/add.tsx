@@ -34,7 +34,9 @@ export default function AddTransaction() {
         const response = await api.get("categories/", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setCategories(response.data);
+        setCategories(
+          Array.isArray(response.data.results) ? response.data.results : []
+        );
       } catch (error) {
         console.error("Erro ao carregar categorias:", error);
       }

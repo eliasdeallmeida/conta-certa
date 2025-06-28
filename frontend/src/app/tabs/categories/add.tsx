@@ -17,6 +17,7 @@ import ColorPicker from "../../../components/ColorPicker";
 export default function AddCategory() {
   const [name, setName] = useState("");
   const [color, setColor] = useState("#000000");
+  const [monthlyLimit, setMonthlyLimit] = useState("");
   const router = useRouter();
 
   const handleSubmit = async () => {
@@ -29,7 +30,13 @@ export default function AddCategory() {
     try {
       await api.post(
         "categories/",
-        { name, color },
+        {
+          name,
+          color,
+          monthly_limit: monthlyLimit
+            ? parseFloat(monthlyLimit.replace(",", "."))
+            : null,
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       router.push("/tabs/categories");
@@ -46,6 +53,13 @@ export default function AddCategory() {
         value={name}
         onChangeText={setName}
         placeholder="Ex: Alimentação"
+      />
+      <InputField
+        label="Meta de gasto mensal (opcional)"
+        value={monthlyLimit}
+        onChangeText={setMonthlyLimit}
+        placeholder="Ex: 500.00"
+        keyboardType="default"
       />
       <ColorPicker value={color} onChange={setColor} />
       <ButtonPrimary title="Adicionar" onPress={handleSubmit} />

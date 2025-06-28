@@ -19,6 +19,7 @@ export default function EditCategory() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [color, setColor] = useState("#000000");
+  const [monthlyLimit, setMonthlyLimit] = useState("");
 
   useEffect(() => {
     const fetchCategory = async () => {
@@ -29,6 +30,9 @@ export default function EditCategory() {
         });
         setName(response.data.name);
         setColor(response.data.color);
+        setMonthlyLimit(
+          response.data.monthly_limit ? String(response.data.monthly_limit) : ""
+        );
       } catch (error) {
         console.error("Erro ao buscar categoria:", error);
         Alert.alert("Erro", "Categoria não encontrada");
@@ -49,7 +53,13 @@ export default function EditCategory() {
     try {
       await api.put(
         `categories/${id}/`,
-        { name, color },
+        {
+          name,
+          color,
+          monthly_limit: monthlyLimit
+            ? parseFloat(monthlyLimit.replace(",", "."))
+            : null,
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       router.push("/tabs/categories");
@@ -67,6 +77,13 @@ export default function EditCategory() {
         value={name}
         onChangeText={setName}
         placeholder="Nome da categoria"
+      />
+      <InputField
+        label="Meta de gasto mensal (opcional)"
+        value={monthlyLimit}
+        onChangeText={setMonthlyLimit}
+        placeholder="Ex: 500.00"
+        keyboardType="default"
       />
       <ColorPicker value={color} onChange={setColor} />
       <ButtonPrimary title="Salvar" onPress={handleSubmit} />

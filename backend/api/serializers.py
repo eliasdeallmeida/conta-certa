@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import User, Category, Transaction
+from datetime import date
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -66,11 +67,28 @@ class CategorySerializer(serializers.ModelSerializer):
         name (str): Nome da categoria.
         user (User): Usuário dono da categoria.
         color (str): Cor da categoria.
+        monthly_limit (Decimal): Meta de gasto mensal.
+        current_spent (Decimal): Gasto do mês atual na categoria.
     """
+    current_spent = serializers.SerializerMethodField()
+
     class Meta:
         model = Category
         fields = '__all__'
         read_only_fields = ['user']
+
+    def get_current_spent(self, obj):
+        today = date.today()
+        month = today.month
+        year = today.year
+        # Soma apenas despesas do mês atual
+        return sum(
+            t.value for t in obj.transactions.filter(
+                transaction_type='expense',
+                date__year=year,
+                date__month=month
+            )
+        )
 
     def validate_name(self, value):
         """
@@ -158,7 +176,6 @@ class TransactionSerializer(serializers.ModelSerializer):
         Raises:
             serializers.ValidationError: Se a data for futura.
         """
-        from datetime import date
         if value > date.today():
             raise serializers.ValidationError('A data não pode ser futura.')
         return value

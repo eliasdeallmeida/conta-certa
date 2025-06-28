@@ -1,4 +1,5 @@
-from rest_framework import generics, permissions, viewsets
+from rest_framework import generics, permissions, viewsets, filters
+from rest_framework.pagination import PageNumberPagination
 from .serializers import UserSerializer, CategorySerializer, TransactionSerializer
 from .models import User, Category, Transaction
 
@@ -20,6 +21,12 @@ class CreateUserView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
 
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
 class CategoryViewSet(viewsets.ModelViewSet):
     """
     Endpoint para CRUD de categorias do usuário autenticado.
@@ -37,6 +44,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     """
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         """
@@ -74,6 +82,10 @@ class TransactionViewSet(viewsets.ModelViewSet):
     """
     serializer_class = TransactionSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['description']
+    ordering_fields = ['date', 'value']
 
     def get_queryset(self):
         """
@@ -82,7 +94,18 @@ class TransactionViewSet(viewsets.ModelViewSet):
         Returns:
             QuerySet: Transações do usuário.
         """
-        return Transaction.objects.filter(user=self.request.user)
+        queryset = Transaction.objects.filter(user=self.request.user)
+        # Filtros customizados
+        tipo = self.request.query_params.get('tipo')
+        categoria = self.request.query_params.get('categoria')
+        data = self.request.query_params.get('data')
+        if tipo:
+            queryset = queryset.filter(transaction_type=tipo)
+        if categoria:
+            queryset = queryset.filter(category__id=categoria)
+        if data:
+            queryset = queryset.filter(date=data)
+        return queryset
 
     def perform_create(self, serializer):
         """

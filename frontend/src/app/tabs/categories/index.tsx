@@ -13,19 +13,26 @@ import api from "../../../services/axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CategoryItem from "../../../components/CategoryItem";
 import ButtonPrimary from "../../../components/ButtonPrimary";
+import { Picker } from "@react-native-picker/picker";
 
 export default function Categories() {
   const router = useRouter();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (pageNum = page, size = pageSize) => {
+    setLoading(true);
     const token = await AsyncStorage.getItem("accessToken");
     try {
-      const response = await api.get("categories/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCategories(response.data);
+      const response = await api.get(
+        `categories/?page=${pageNum}&page_size=${size}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setCategories(response.data.results);
+      setTotal(response.data.count);
     } catch (error) {
       console.error("Erro ao buscar categorias:", error);
     } finally {
@@ -48,7 +55,9 @@ export default function Categories() {
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [page, pageSize]);
+
+  const totalPages = Math.ceil(total / pageSize);
 
   return (
     <View style={styles.container}>
@@ -56,7 +65,40 @@ export default function Categories() {
         title={"+ Nova Categoria"}
         onPress={() => router.push("/tabs/categories/add")}
       />
-
+      <View
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}
+      >
+        <Text style={{ marginRight: 8 }}>Itens por página:</Text>
+        <Picker
+          selectedValue={pageSize}
+          style={{ width: 100 }}
+          onValueChange={(v) => {
+            setPageSize(v);
+            setPage(1);
+          }}
+        >
+          {[10, 20, 50, 100].map((n) => (
+            <Picker.Item key={n} label={String(n)} value={n} />
+          ))}
+        </Picker>
+        <Text style={{ marginLeft: 16 }}>
+          Página: {page} / {totalPages || 1}
+        </Text>
+        <TouchableOpacity
+          disabled={page <= 1}
+          onPress={() => setPage(page - 1)}
+          style={{ marginLeft: 8, opacity: page <= 1 ? 0.5 : 1 }}
+        >
+          <Text>{"<"}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          disabled={page >= totalPages}
+          onPress={() => setPage(page + 1)}
+          style={{ marginLeft: 4, opacity: page >= totalPages ? 0.5 : 1 }}
+        >
+          <Text>{">"}</Text>
+        </TouchableOpacity>
+      </View>
       {loading ? (
         <ActivityIndicator size="large" color="#167ec5" />
       ) : (
@@ -66,6 +108,9 @@ export default function Categories() {
           renderItem={({ item }) => (
             <CategoryItem
               name={item.name}
+              color={item.color}
+              monthlyLimit={item.monthly_limit}
+              currentSpent={item.current_spent}
               onEdit={() => router.push(`/tabs/categories/${item.id}`)}
               onDelete={() => deleteCategory(item.id)}
             />
