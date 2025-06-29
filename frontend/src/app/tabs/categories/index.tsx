@@ -109,8 +109,10 @@ export default function Categories() {
             <CategoryItem
               name={item.name}
               color={item.color}
-              monthlyLimit={item.monthly_limit}
-              currentSpent={item.current_spent}
+              monthlyLimit={
+                item.monthly_limit !== null ? Number(item.monthly_limit) : null
+              }
+              currentSpent={Number(item.current_spent) || 0}
               onEdit={() => router.push(`/tabs/categories/${item.id}`)}
               onDelete={() => deleteCategory(item.id)}
             />

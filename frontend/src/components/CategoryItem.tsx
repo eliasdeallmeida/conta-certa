@@ -40,7 +40,7 @@ export default function CategoryItem({
     currentSpent > monthlyLimit;
   return (
     <View style={styles.item}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+      <View style={{ gap: 8 }}>
         <View
           style={[
             styles.categoryTag,
@@ -51,7 +51,7 @@ export default function CategoryItem({
             {name}
           </Text>
         </View>
-        {typeof monthlyLimit === "number" && !isNaN(monthlyLimit) && (
+        {typeof monthlyLimit === "number" && !isNaN(monthlyLimit) ? (
           <Text
             style={{
               color: limitExceeded ? "#e53935" : "#43a047",
@@ -61,6 +61,8 @@ export default function CategoryItem({
           >
             Meta: R$ {monthlyLimit.toFixed(2)}
           </Text>
+        ) : (
+          <Text style={{ color: "#999", marginLeft: 8 }}>(sem meta)</Text>
         )}
         {typeof currentSpent === "number" && !isNaN(currentSpent) && (
           <Text

@@ -74,10 +74,10 @@ class Transaction(models.Model):
 
     description = models.CharField(max_length=200)
     value = models.DecimalField(max_digits=10, decimal_places=2)
-    transaction_type = models.CharField(max_length=7, choices=TRANSACTION_TYPES)
+    transaction_type = models.CharField(max_length=10, choices=[('expense', 'Despesa'), ('income', 'Receita')])
     date = models.DateField()
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='transactions')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='transactions')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         """

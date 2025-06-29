@@ -81,14 +81,13 @@ class CategorySerializer(serializers.ModelSerializer):
         today = date.today()
         month = today.month
         year = today.year
-        # Soma apenas despesas do mês atual
-        return sum(
-            t.value for t in obj.transactions.filter(
-                transaction_type='expense',
-                date__year=year,
-                date__month=month
-            )
+        qs = obj.transactions.filter(
+            transaction_type='expense',
+            date__year=year,
+            date__month=month
         )
+        print(f"[DEBUG] Categoria {obj.name} tem {qs.count()} transações de despesa em {month}/{year}")
+        return sum(t.value for t in qs)
 
     def validate_name(self, value):
         """
