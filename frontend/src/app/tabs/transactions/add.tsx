@@ -15,6 +15,8 @@ import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import InputField from "../../../components/InputField";
 import ButtonPrimary from "../../../components/ButtonPrimary";
+import axios from "axios";
+import debounce from "lodash.debounce";
 
 export default function AddTransaction() {
   const router = useRouter();
@@ -23,6 +25,7 @@ export default function AddTransaction() {
   const [transactionType, setTransactionType] = useState("expense");
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
   const [categories, setCategories] = useState([]);
+  const [suggestedCategories, setSuggestedCategories] = useState<string[]>([]);
 
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -88,6 +91,30 @@ export default function AddTransaction() {
     return `${day}/${month}/${year}`;
   }
 
+  const fetchCategorySuggestions = debounce(async (text: string) => {
+    if (text.length < 3) {
+      setSuggestedCategories([]);
+      return;
+    }
+
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      const response = await axios.get(
+        `http://192.168.100.22:8000/api/categorias/sugestoes/`,
+        {
+          params: { q: text },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setSuggestedCategories(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar sugestões:", error);
+      setSuggestedCategories([]);
+    }
+  }, 300);
+
   return (
     <View style={styles.container}>
       {/* <Text style={styles.title}>Nova Transação</Text> */}
@@ -95,9 +122,39 @@ export default function AddTransaction() {
       <InputField
         label="Descrição"
         value={description}
-        onChangeText={setDescription}
+        onChangeText={(text) => {
+          setDescription(text);
+          fetchCategorySuggestions(text);
+        }}
         placeholder="Ex: Mercado"
       />
+
+      {suggestedCategories.length > 0 && (
+        <View style={{ marginBottom: 10 }}>
+          <Text style={{ fontWeight: "bold", marginBottom: 4 }}>
+            Sugestões de categoria:
+          </Text>
+          {suggestedCategories.map((name, index) => {
+            const cat = categories.find((c) => c.name === name);
+            if (!cat) return null;
+
+            return (
+              <TouchableOpacity
+                key={index}
+                onPress={() => setCategoryId(cat.id)}
+                style={{
+                  padding: 8,
+                  backgroundColor: "#eee",
+                  borderRadius: 6,
+                  marginBottom: 4,
+                }}
+              >
+                <Text>{cat.name}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
 
       <InputField
         label="Valor"

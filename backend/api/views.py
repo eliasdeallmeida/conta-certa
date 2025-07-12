@@ -1,5 +1,9 @@
 from rest_framework import generics, permissions, viewsets, filters
+from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from .serializers import UserSerializer, CategorySerializer, TransactionSerializer
 from .models import User, Category, Transaction
 
@@ -115,3 +119,23 @@ class TransactionViewSet(viewsets.ModelViewSet):
             serializer (TransactionSerializer): Serializer da transação.
         """
         serializer.save(user=self.request.user)
+
+@api_view(['GET'])
+def sugerir_categorias(request):
+    query = request.GET.get('q', '').lower()
+    if not query:
+        return Response([])
+
+    transacoes = Transaction.objects.exclude(category=None)
+    descricoes = [t.description.lower() for t in transacoes]
+    categorias = [t.category.name for t in transacoes]
+
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform(descricoes + [query])
+    
+    similaridades = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1])[0]
+    
+    top_indices = similaridades.argsort()[::-1][:5]
+    sugestoes = list({categorias[i] for i in top_indices})
+
+    return Response(sugestoes)
