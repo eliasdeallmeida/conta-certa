@@ -7,6 +7,19 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from .serializers import UserSerializer, CategorySerializer, TransactionSerializer
 from .models import User, Category, Transaction
+from .utils import normalizar
+
+
+REGRAS_FIXAS = {
+    "Alimentação": ["mercado", "comida", "restaurante", "supermercado", "lanche", "almoço", "jantar", "café"],
+    "Transporte": ["uber", "gasolina", "ônibus", "metrô", "99", "moto", "bicicleta"],
+    "Saúde": ["farmácia", "remédio", "médico", "hospital", "dentista"],
+    "Roupas": ["roupa", "vestido", "calça", "camiseta", "camisa", "saia", "calção", "bermuda", "short",  "cueca", "calcinha", "sutiã", "roupa íntima"],
+    "Calçados": ["sapato", "tênis", "sandália", "chinelo", "bota", "botas", "sneaker", "tenis", "tenis de corrida", "tenis de caminhada", "tenis de corrida", "tenis de caminhada"],
+    "Lazer": ["cinema", "teatro", "show", "stand up"],
+    "Casa": ["aluguel", "condomínio", "água", "luz", "internet"],
+    "Outros": ["presente", "presente para alguém", "presente para mim", "presente para alguém", "presente para mim"],
+}
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -121,33 +134,70 @@ class TransactionViewSet(viewsets.ModelViewSet):
         """
         serializer.save(user=self.request.user)
 
-@api_view(['GET'])
-def sugerir_categorias(request):
-    query = request.GET.get('q', '').lower()
-    if not query:
-        return Response([])
 
-    transacoes = Transaction.objects.exclude(category=None)
-    descricoes = [t.description.lower() for t in transacoes]
+def sugestao_por_regras(descricao):
+    descricao = normalizar(descricao)
+    correspondencias = []
+    for categoria, palavras in REGRAS_FIXAS.items():
+        for palavra in palavras:
+            if normalizar(palavra) in descricao:
+                correspondencias.append(categoria)
+                break
+    return correspondencias[:3]
+
+
+def sugestao_por_similaridade(descricao, transacoes):
+    descricoes = [normalizar(t.description) for t in transacoes]
+    descricao_normalizada = normalizar(descricao)
     categorias = [t.category.name for t in transacoes]
 
     vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(descricoes + [query])
-    
+    tfidf_matrix = vectorizer.fit_transform(descricoes + [descricao_normalizada])
     similaridades = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1])[0]
-    
+
     categoria_scores = defaultdict(float)
     for i, score in enumerate(similaridades):
         cat = categorias[i]
         if score > categoria_scores[cat]:
             categoria_scores[cat] = score
 
-    # Ordena categorias pela similaridade (relevância)
-    sugestoes_ordenadas = sorted(
-        categoria_scores.items(), key=lambda item: item[1], reverse=True
-    )
+    sugestoes_ordenadas = sorted(categoria_scores.items(), key=lambda x: x[1], reverse=True)
+    return [cat for cat, _ in sugestoes_ordenadas[:3]]
 
-    # Limita a 3 ou 5 sugestões mais relevantes
-    sugestoes = [cat for cat, _ in sugestoes_ordenadas[:3]]
 
-    return Response(sugestoes)
+@api_view(['GET'])
+def sugerir_categorias(request):
+    user = request.user
+    descricao = request.GET.get('q', '').strip().lower()
+
+    if not descricao:
+        return Response([])
+
+    transacoes_usuario = Transaction.objects.filter(user=user).exclude(category=None)
+
+    if transacoes_usuario.count() < 10:
+        regras = sugestao_por_regras(descricao)
+        similares = sugestao_por_similaridade(descricao, transacoes_usuario)
+        # Prioriza categorias que aparecem em ambos
+        ranking = []
+
+        # 1. Categorias que aparecem nas duas listas (mais relevantes)
+        for cat in similares:
+            if cat in regras and cat not in ranking:
+                ranking.append(cat)
+
+        # 2. Depois as mais parecidas (do histórico)
+        for cat in similares:
+            if cat not in ranking:
+                ranking.append(cat)
+
+        # 3. Por fim, as que vieram só das regras
+        for cat in regras:
+            if cat not in ranking:
+                ranking.append(cat)
+
+        # Retorna top 3
+        return Response(ranking[:3])
+    else:
+        similares = sugestao_por_similaridade(descricao, transacoes_usuario)
+        return Response(similares)
