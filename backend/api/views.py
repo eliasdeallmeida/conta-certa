@@ -1,3 +1,4 @@
+from collections import defaultdict
 from rest_framework import generics, permissions, viewsets, filters
 from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
@@ -135,7 +136,18 @@ def sugerir_categorias(request):
     
     similaridades = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1])[0]
     
-    top_indices = similaridades.argsort()[::-1][:5]
-    sugestoes = list({categorias[i] for i in top_indices})
+    categoria_scores = defaultdict(float)
+    for i, score in enumerate(similaridades):
+        cat = categorias[i]
+        if score > categoria_scores[cat]:
+            categoria_scores[cat] = score
+
+    # Ordena categorias pela similaridade (relevância)
+    sugestoes_ordenadas = sorted(
+        categoria_scores.items(), key=lambda item: item[1], reverse=True
+    )
+
+    # Limita a 3 ou 5 sugestões mais relevantes
+    sugestoes = [cat for cat, _ in sugestoes_ordenadas[:3]]
 
     return Response(sugestoes)
