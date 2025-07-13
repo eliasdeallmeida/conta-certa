@@ -22,7 +22,7 @@ export default function Register() {
       return;
     }
     try {
-      await axios.post("http://192.168.100.26:8000/api/user/register", {
+      await axios.post("http://192.168.100.22:8000/api/user/register/", {
         name: name,
         username: username,
         email: email,
