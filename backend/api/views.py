@@ -1,7 +1,9 @@
 from collections import defaultdict
+from django.db.models import Sum
 from rest_framework import generics, permissions, viewsets, filters
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -201,3 +203,39 @@ def sugerir_categorias(request):
     else:
         similares = sugestao_por_similaridade(descricao, transacoes_usuario)
         return Response(similares)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def transaction_summary(request):
+    user = request.user
+
+    income = Transaction.objects.filter(user=user, transaction_type="income").aggregate(
+        total=Sum("value")
+    )["total"] or 0
+
+    expense = Transaction.objects.filter(user=user, transaction_type="expense").aggregate(
+        total=Sum("value")
+    )["total"] or 0
+
+    by_category_qs = (
+        Transaction.objects.filter(user=user, transaction_type="expense")
+        .values("category__name", "category__color")
+        .annotate(total=Sum("value"))
+    )
+
+    by_category = [
+        {
+            "name": item["category__name"] or "Sem categoria",
+            "total": item["total"],
+            "color": item["category__color"] or "#ccc",
+        }
+        for item in by_category_qs
+    ]
+
+    return Response({
+        "total_income": income,
+        "total_expense": expense,
+        "balance": income - expense,
+        "by_category": by_category,
+    })
