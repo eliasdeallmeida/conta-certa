@@ -68,7 +68,7 @@ export default function AddCategory() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  container: { flex: 1, padding: 16 },
   label: {
     fontSize: 16,
     fontWeight: "bold",

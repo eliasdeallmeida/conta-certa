@@ -8,13 +8,15 @@ import {
   Alert,
   TextInput,
   ActivityIndicator,
+  Platform,
+  Modal,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import api from "../../../services/axios";
 import { router } from "expo-router";
 import TransactionItem from "../../../components/TransactionItem";
 import ButtonPrimary from "../../../components/ButtonPrimary";
 import { Picker } from "@react-native-picker/picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 interface Transaction {
   id: number;
@@ -37,6 +39,9 @@ export default function Transactions() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [categories, setCategories] = useState<any[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [filterVisible, setFilterVisible] = useState(false);
 
   const fetchCategories = async () => {
     try {
@@ -100,125 +105,185 @@ export default function Transactions() {
 
   return (
     <View style={styles.container}>
-      {/* <Text style={styles.title}>Transações</Text> */}
-      <ButtonPrimary
-        title="Nova Transação"
-        onPress={() => router.push("/tabs/transactions/add")}
-      />
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          marginBottom: 12,
-          flexWrap: "wrap",
-        }}
-      >
-        <Text style={{ marginRight: 8 }}>Itens por página:</Text>
-        <Picker
-          selectedValue={pageSize}
-          style={{ width: 100 }}
-          onValueChange={(v) => {
-            setPageSize(v);
-            setPage(1);
-          }}
-        >
-          {[10, 20, 50, 100].map((n) => (
-            <Picker.Item key={n} label={String(n)} value={n} />
-          ))}
-        </Picker>
-        <Text style={{ marginLeft: 16 }}>
-          Página: {page} / {totalPages || 1}
-        </Text>
-        <TouchableOpacity
-          disabled={page <= 1}
-          onPress={() => setPage(page - 1)}
-          style={{ marginLeft: 8, opacity: page <= 1 ? 0.5 : 1 }}
-        >
-          <Text>{"<"}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          disabled={page >= totalPages}
-          onPress={() => setPage(page + 1)}
-          style={{ marginLeft: 4, opacity: page >= totalPages ? 0.5 : 1 }}
-        >
-          <Text>{">"}</Text>
-        </TouchableOpacity>
-      </View>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          marginBottom: 12,
-          flexWrap: "wrap",
-        }}
-      >
-        <Text style={{ marginRight: 8 }}>Tipo:</Text>
-        <Picker
-          selectedValue={typeFilter}
-          style={{ width: 120 }}
-          onValueChange={(v) => {
-            setTypeFilter(v);
-            setPage(1);
-          }}
-        >
-          <Picker.Item label="Todos" value="" />
-          <Picker.Item label="Despesa" value="expense" />
-          <Picker.Item label="Receita" value="income" />
-        </Picker>
-        <Text style={{ marginLeft: 16 }}>Categoria:</Text>
-        <Picker
-          selectedValue={categoryFilter}
-          style={{ width: 140 }}
-          onValueChange={(v) => {
-            setCategoryFilter(v);
-            setPage(1);
-          }}
-        >
-          <Picker.Item label="Todas" value="" />
-          {Array.isArray(categories) &&
-            categories.length > 0 &&
-            categories.map((cat) => (
-              <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
-            ))}
-        </Picker>
-        <Text style={{ marginLeft: 16 }}>Data:</Text>
-        <TextInput
-          style={{
-            borderColor: "#ccc",
-            borderWidth: 1,
-            borderRadius: 8,
-            padding: 8,
-            width: 110,
-            marginLeft: 4,
-          }}
-          value={dateFilter}
-          onChangeText={(v) => {
-            setDateFilter(v);
-            setPage(1);
-          }}
-          placeholder="YYYY-MM-DD"
-        />
-      </View>
-      {loading ? (
-        <ActivityIndicator size="large" color="#167ec5" />
-      ) : (
-        <FlatList
-          data={transactions}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <TransactionItem
-              description={item.description}
-              value={`R$ ${item.value}`}
-              type={item.transaction_type === "expense" ? "Despesa" : "Receita"}
-              date={new Date(item.date).toLocaleDateString("pt-BR")}
-              category={item.category_name || "Nenhuma"}
-              categoryColor={item.category_color}
-              onEdit={() => router.push(`/tabs/transactions/${item.id}`)}
-              onDelete={() => handleDelete(item.id)}
+      <FlatList
+        ListHeaderComponent={
+          <View style={{ marginBottom: 16 }}>
+            <ButtonPrimary
+              title="Nova Transação"
+              onPress={() => router.push("/tabs/transactions/add")}
+              // style={{ marginBottom: 16 }}
             />
-          )}
-        />
-      )}
+
+            <ButtonPrimary
+              title="Filtrar"
+              onPress={() => setFilterVisible(true)}
+              // style={{ marginBottom: 16 }}
+            />
+
+            <Modal
+              visible={filterVisible}
+              animationType="slide"
+              transparent={true}
+              onRequestClose={() => setFilterVisible(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Filtros</Text>
+
+                  <Text style={styles.filterLabel}>Tipo:</Text>
+                  <Picker
+                    selectedValue={typeFilter}
+                    onValueChange={(v) => {
+                      setTypeFilter(v);
+                    }}
+                  >
+                    <Picker.Item label="Todos" value="" />
+                    <Picker.Item label="Despesa" value="expense" />
+                    <Picker.Item label="Receita" value="income" />
+                  </Picker>
+
+                  <Text style={styles.filterLabel}>Categoria:</Text>
+                  <Picker
+                    selectedValue={categoryFilter}
+                    onValueChange={(v) => {
+                      setCategoryFilter(v);
+                    }}
+                  >
+                    <Picker.Item label="Todas" value="" />
+                    {categories.map((cat) => (
+                      <Picker.Item
+                        key={cat.id}
+                        label={cat.name}
+                        value={cat.id}
+                      />
+                    ))}
+                  </Picker>
+
+                  <Text style={styles.filterLabel}>Data:</Text>
+                  <TouchableOpacity
+                    onPress={() => setShowDatePicker(true)}
+                    style={styles.dateInput}
+                  >
+                    <Text>
+                      {selectedDate
+                        ? selectedDate.toLocaleDateString("pt-BR")
+                        : "Selecionar data"}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={selectedDate || new Date()}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={(event, date) => {
+                        setShowDatePicker(false);
+                        if (event.type === "set" && date) {
+                          setSelectedDate(date);
+                          setDateFilter(date.toISOString().split("T")[0]);
+                        }
+                      }}
+                    />
+                  )}
+
+                  <View style={styles.modalButtons}>
+                    <ButtonPrimary
+                      title="Aplicar"
+                      onPress={() => {
+                        setFilterVisible(false);
+                        setPage(1);
+                        fetchTransactions(1);
+                      }}
+                    />
+
+                    <TouchableOpacity
+                      style={styles.clearButton}
+                      onPress={() => {
+                        setTypeFilter("");
+                        setCategoryFilter("");
+                        setDateFilter("");
+                        setSelectedDate(null);
+                        setFilterVisible(false);
+                        setPage(1);
+                        fetchTransactions(1);
+                      }}
+                    >
+                      <Text style={styles.buttonText}>Limpar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </Modal>
+
+            <View style={styles.pagination}>
+              <View style={styles.pickerGroup}>
+                <Text style={styles.label}>Itens por página:</Text>
+                <Picker
+                  selectedValue={pageSize}
+                  style={styles.picker}
+                  onValueChange={(v) => {
+                    setPageSize(v);
+                    setPage(1);
+                  }}
+                >
+                  {[10, 20, 50, 100].map((n) => (
+                    <Picker.Item key={n} label={String(n)} value={n} />
+                  ))}
+                </Picker>
+              </View>
+
+              <View style={styles.pageControls}>
+                <Text style={styles.label}>
+                  Página {page} de {totalPages || 1}
+                </Text>
+                <View style={{ flexDirection: "row", gap: 8, marginLeft: 8 }}>
+                  <TouchableOpacity
+                    disabled={page <= 1}
+                    onPress={() => setPage(page - 1)}
+                    style={[styles.pageButton, page <= 1 && { opacity: 0.5 }]}
+                  >
+                    <Text style={styles.pageButtonText}>{"<"}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    disabled={page >= totalPages}
+                    onPress={() => setPage(page + 1)}
+                    style={[
+                      styles.pageButton,
+                      page >= totalPages && { opacity: 0.5 },
+                    ]}
+                  >
+                    <Text style={styles.pageButtonText}>{">"}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        }
+        data={transactions}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <TransactionItem
+            description={item.description}
+            value={`R$ ${item.value}`}
+            type={item.transaction_type === "expense" ? "Despesa" : "Receita"}
+            date={new Date(item.date).toLocaleDateString("pt-BR")}
+            category={item.category_name || "Nenhuma"}
+            categoryColor={item.category_color}
+            onEdit={() => router.push(`/tabs/transactions/${item.id}`)}
+            onDelete={() => handleDelete(item.id)}
+          />
+        )}
+        ListEmptyComponent={
+          loading ? (
+            <ActivityIndicator size="large" color="#167ec5" />
+          ) : (
+            <Text style={{ textAlign: "center", marginTop: 40, color: "#666" }}>
+              Nenhuma transação encontrada.
+            </Text>
+          )
+        }
+        contentContainerStyle={{ paddingBottom: 40 }}
+      />
     </View>
   );
 }
@@ -226,7 +291,7 @@ export default function Transactions() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 16,
   },
   title: {
     fontSize: 20,
@@ -234,39 +299,119 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     alignSelf: "center",
   },
-  addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#167ec5",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  addText: {
-    color: "#fff",
-    fontWeight: "bold",
-    marginLeft: 8,
-  },
-  card: {
-    backgroundColor: "#f9f9f9",
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    elevation: 1,
-  },
-  itemTitle: {
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  details: {
-    color: "#555",
-    marginTop: 2,
-  },
   actions: {
     justifyContent: "space-between",
     alignItems: "center",
     marginLeft: 12,
+  },
+  filterGroup: {
+    marginBottom: 20,
+    padding: 12,
+    backgroundColor: "#f4f7fa",
+    borderRadius: 10,
+    elevation: 1,
+  },
+  filterLabel: {
+    fontWeight: "600",
+    marginTop: 8,
+    marginBottom: 4,
+    color: "#333",
+  },
+  // picker: {
+  //   backgroundColor: "#fff",
+  //   borderRadius: 8,
+  //   marginBottom: 8,
+  //   elevation: 1,
+  // },
+  picker: {
+    width: 100,
+    height: 50,
+    padding: 0,
+    backgroundColor: "#f4f7fa",
+  },
+  pickerGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  pagination: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  dateInput: {
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
+    backgroundColor: "#fff",
+    marginBottom: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)", // escurece fundo
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
+  },
+  modalContent: {
+    width: "100%",
+    maxWidth: 400,
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 16,
+    elevation: 10,
+    gap: 10, // adiciona espaçamento entre elementos
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+    color: "#167ec5",
+  },
+  modalButtons: {
+    flexDirection: "column",
+    justifyContent: "space-between",
+    gap: 12,
+    marginTop: 20,
+  },
+  clearButton: {
+    // flex: 1,
+    backgroundColor: "#e53935",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  applyButton: {
+    flex: 1,
+    backgroundColor: "#167ec5",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  label: {
+    fontWeight: "600",
+    color: "#333",
+  },
+  pageControls: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  pageButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: "#167ec5",
+    borderRadius: 4,
+  },
+  pageButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });

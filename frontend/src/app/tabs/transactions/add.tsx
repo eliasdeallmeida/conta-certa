@@ -223,7 +223,7 @@ export default function AddTransaction() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  container: { flex: 1, padding: 16 },
   title: {
     fontSize: 20,
     marginBottom: 16,

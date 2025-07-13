@@ -12,6 +12,7 @@ import { usePathname, Slot } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const pages = {
   "/tabs/home": "Início",
@@ -27,23 +28,16 @@ const pages = {
 export default function Layout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const pageTitle = getPageTitle(pathname);
-  // const pageTitle = pages[pathname] || "App";
   const [menuVisible, setMenuVisible] = useState(false);
   const screenWidth = Dimensions.get("window").width;
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
 
   function getPageTitle(pathname: string) {
     if (pages[pathname]) return pages[pathname];
-
-    // Procurar manualmente por rota dinâmica correspondente
-    if (/^\/tabs\/transactions\/\d+$/.test(pathname)) {
+    if (/^\/tabs\/transactions\/\d+$/.test(pathname))
       return pages["/tabs/transactions/[id]"];
-    }
-
-    if (/^\/tabs\/categories\/\d+$/.test(pathname)) {
+    if (/^\/tabs\/categories\/\d+$/.test(pathname))
       return pages["/tabs/categories/[id]"];
-    }
-
     return "App";
   }
 
@@ -76,15 +70,15 @@ export default function Layout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{pageTitle}</Text>
         <TouchableOpacity onPress={openMenu}>
           <Ionicons name="menu" size={28} color="black" />
         </TouchableOpacity>
       </View>
-
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
       {menuVisible && (
         <View style={styles.modalOverlay}>
@@ -96,15 +90,9 @@ export default function Layout({ children }: { children: ReactNode }) {
             </TouchableOpacity>
 
             {[
-              // { label: "Perfil", path: "/tabs/profile" },
               { label: "Início", path: "/tabs/home" },
               { label: "Transações", path: "/tabs/transactions" },
               { label: "Categorias", path: "/tabs/categories" },
-              { label: "Metas", path: "/tabs/goals" },
-              { label: "Limites", path: "/tabs/limits" },
-              { label: "Lembretes", path: "/tabs/reminders" },
-              { label: "Lista de desejos", path: "/tabs/wishlist" },
-              { label: "Relatórios", path: "/tabs/reports" },
             ].map((item) => (
               <TouchableOpacity
                 key={item.path}
@@ -124,20 +112,28 @@ export default function Layout({ children }: { children: ReactNode }) {
         </View>
       )}
 
-      {/* <View style={{ flex: 1 }}>{children}</View> */}
-      <Slot />
-    </View>
+      <View style={styles.contentContainer}>
+        <Slot />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
   header: {
     backgroundColor: "#fff",
     padding: 16,
+    // paddingVertical: 14,
+    // paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    elevation: 3,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
   headerTitle: {
     fontSize: 20,
@@ -154,24 +150,36 @@ const styles = StyleSheet.create({
     width: "80%",
     height: "100%",
     backgroundColor: "#fff",
-    padding: 20,
-    paddingTop: 50,
+    padding: 16,
+    paddingTop: 72,
     position: "absolute",
     right: 0,
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 16,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: -2, height: 0 },
   },
   menuClose: {
     position: "absolute",
-    top: 20,
-    right: 20,
+    top: 48,
+    right: 16,
   },
   menuItem: {
     paddingVertical: 12,
+    paddingHorizontal: 4,
   },
   menuText: {
     fontSize: 18,
   },
   menuBottom: {
     marginTop: "auto",
-    paddingTop: 20,
+    paddingTop: 16,
+    paddingBottom: 48,
+    paddingHorizontal: 4,
+  },
+  contentContainer: {
+    flex: 1,
   },
 });

@@ -71,7 +71,6 @@ export default function EditCategory() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Editar Categoria</Text>
       <InputField
         label="Nome da categoria"
         value={name}
@@ -92,7 +91,7 @@ export default function EditCategory() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  container: { flex: 1, padding: 16 },
   label: { fontSize: 16, fontWeight: "bold", marginBottom: 8 },
   input: {
     borderColor: "#ccc",

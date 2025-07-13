@@ -61,48 +61,61 @@ export default function Categories() {
 
   return (
     <View style={styles.container}>
-      <ButtonPrimary
-        title={"+ Nova Categoria"}
-        onPress={() => router.push("/tabs/categories/add")}
-      />
-      <View
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}
-      >
-        <Text style={{ marginRight: 8 }}>Itens por página:</Text>
-        <Picker
-          selectedValue={pageSize}
-          style={{ width: 100 }}
-          onValueChange={(v) => {
-            setPageSize(v);
-            setPage(1);
-          }}
-        >
-          {[10, 20, 50, 100].map((n) => (
-            <Picker.Item key={n} label={String(n)} value={n} />
-          ))}
-        </Picker>
-        <Text style={{ marginLeft: 16 }}>
-          Página: {page} / {totalPages || 1}
-        </Text>
-        <TouchableOpacity
-          disabled={page <= 1}
-          onPress={() => setPage(page - 1)}
-          style={{ marginLeft: 8, opacity: page <= 1 ? 0.5 : 1 }}
-        >
-          <Text>{"<"}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          disabled={page >= totalPages}
-          onPress={() => setPage(page + 1)}
-          style={{ marginLeft: 4, opacity: page >= totalPages ? 0.5 : 1 }}
-        >
-          <Text>{">"}</Text>
-        </TouchableOpacity>
-      </View>
       {loading ? (
         <ActivityIndicator size="large" color="#167ec5" />
       ) : (
         <FlatList
+          ListHeaderComponent={
+            <View style={{ gap: 10, marginBottom: 16 }}>
+              <ButtonPrimary
+                title="Nova Categoria"
+                onPress={() => router.push("/tabs/categories/add")}
+              />
+
+              <View style={styles.pagination}>
+                <View style={styles.pickerGroup}>
+                  <Text style={styles.label}>Itens por página:</Text>
+                  <Picker
+                    selectedValue={pageSize}
+                    style={styles.picker}
+                    onValueChange={(v) => {
+                      setPageSize(v);
+                      setPage(1);
+                    }}
+                  >
+                    {[10, 20, 50, 100].map((n) => (
+                      <Picker.Item key={n} label={String(n)} value={n} />
+                    ))}
+                  </Picker>
+                </View>
+
+                <View style={styles.pageControls}>
+                  <Text style={styles.label}>
+                    Página {page} de {totalPages || 1}
+                  </Text>
+                  <View style={{ flexDirection: "row", gap: 8, marginLeft: 8 }}>
+                    <TouchableOpacity
+                      disabled={page <= 1}
+                      onPress={() => setPage(page - 1)}
+                      style={[styles.pageButton, page <= 1 && { opacity: 0.5 }]}
+                    >
+                      <Text style={styles.pageButtonText}>{"<"}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      disabled={page >= totalPages}
+                      onPress={() => setPage(page + 1)}
+                      style={[
+                        styles.pageButton,
+                        page >= totalPages && { opacity: 0.5 },
+                      ]}
+                    >
+                      <Text style={styles.pageButtonText}>{">"}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </View>
+          }
           data={categories}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
@@ -117,6 +130,12 @@ export default function Categories() {
               onDelete={() => deleteCategory(item.id)}
             />
           )}
+          contentContainerStyle={{ paddingBottom: 40 }}
+          ListEmptyComponent={
+            <Text style={{ textAlign: "center", marginTop: 40, color: "#666" }}>
+              Nenhuma categoria encontrada.
+            </Text>
+          }
         />
       )}
     </View>
@@ -124,40 +143,43 @@ export default function Categories() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  addButton: {
-    backgroundColor: "#167ec5",
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 20,
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
-  addButtonText: {
+  pagination: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  pickerGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  picker: {
+    width: 100,
+    backgroundColor: "#f4f7fa",
+  },
+  label: {
+    fontWeight: "600",
+    color: "#333",
+  },
+  pageControls: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  pageButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: "#167ec5",
+    borderRadius: 4,
+  },
+  pageButtonText: {
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
-  },
-  item: {
-    backgroundColor: "#f2f2f2",
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  actions: {
-    flexDirection: "row",
-    marginTop: 8,
-    gap: 16,
-  },
-  edit: {
-    color: "#167ec5",
-    fontWeight: "600",
-  },
-  delete: {
-    color: "red",
-    fontWeight: "600",
   },
 });
