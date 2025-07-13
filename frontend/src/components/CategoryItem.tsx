@@ -1,86 +1,75 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
-function darkenColor(hex: string, amount = 0.6) {
-  let c = hex.replace("#", "");
-  if (c.length === 3) c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
-  const num = parseInt(c, 16);
-  let r = Math.max(0, ((num >> 16) & 0xff) * (1 - amount));
-  let g = Math.max(0, ((num >> 8) & 0xff) * (1 - amount));
-  let b = Math.max(0, (num & 0xff) * (1 - amount));
-  return `#${[r, g, b]
-    .map((x) => Math.round(x).toString(16).padStart(2, "0"))
-    .join("")}`;
-}
 
 interface Props {
   name: string;
-  color?: string;
-  monthlyLimit?: number;
-  currentSpent?: number;
+  color: string;
+  monthlyLimit: number | null;
+  currentSpent: number;
   onEdit: () => void;
   onDelete: () => void;
 }
 
 export default function CategoryItem({
   name,
-  color = "#e0e0e0",
+  color,
   monthlyLimit,
   currentSpent,
   onEdit,
   onDelete,
 }: Props) {
-  const tagBgColor = color;
-  const tagBorderColor = darkenColor(color, 0.6);
-  const tagTextColor = tagBorderColor;
-  const limitExceeded =
-    monthlyLimit !== undefined &&
-    currentSpent !== undefined &&
-    currentSpent > monthlyLimit;
+  const progress =
+    monthlyLimit && monthlyLimit > 0
+      ? Math.min(currentSpent / monthlyLimit, 1)
+      : 0;
+  const progressColor = progress >= 1 ? "#e53935" : "#43a047";
+
   return (
-    <View style={styles.item}>
-      <View style={{ gap: 8 }}>
-        <View
-          style={[
-            styles.categoryTag,
-            { backgroundColor: tagBgColor, borderColor: tagBorderColor },
-          ]}
-        >
-          <Text style={[styles.categoryTagText, { color: tagTextColor }]}>
-            {name}
-          </Text>
+    <View style={styles.card}>
+      <View style={styles.leftSection}>
+        <View style={styles.header}>
+          <View style={[styles.colorDot, { backgroundColor: color }]} />
+          <Text style={styles.name}>{name}</Text>
         </View>
-        {typeof monthlyLimit === "number" && !isNaN(monthlyLimit) ? (
-          <Text
-            style={{
-              color: limitExceeded ? "#e53935" : "#43a047",
-              fontWeight: "bold",
-              marginLeft: 8,
-            }}
-          >
-            Meta: R$ {monthlyLimit.toFixed(2)}
-          </Text>
-        ) : (
-          <Text style={{ color: "#999", marginLeft: 8 }}>(sem meta)</Text>
-        )}
-        {typeof currentSpent === "number" && !isNaN(currentSpent) && (
-          <Text
-            style={{
-              color: limitExceeded ? "#e53935" : "#43a047",
-              marginLeft: 8,
-            }}
-          >
-            Gasto: R$ {currentSpent.toFixed(2)}
-          </Text>
-        )}
+
+        {/* {monthlyLimit !== null && (
+          <> */}
+        <View style={styles.progressBarBackground}>
+          <View
+            style={[
+              styles.progressBarFill,
+              {
+                width:
+                  monthlyLimit && monthlyLimit > 0
+                    ? `${Math.min((currentSpent / monthlyLimit) * 100, 100)}%`
+                    : "0%",
+                backgroundColor:
+                  monthlyLimit && monthlyLimit > 0
+                    ? currentSpent > monthlyLimit
+                      ? "#e53935" // vermelho
+                      : "#43a047" // verde
+                    : "#ccc", // cinza se não há meta
+              },
+            ]}
+          />
+        </View>
+        <Text style={styles.spentText}>
+          Gasto: R$ {currentSpent.toFixed(2)} /{" "}
+          {monthlyLimit !== null ? `R$ ${monthlyLimit.toFixed(2)}` : "Sem meta"}
+        </Text>
+        {/* </>
+        )} */}
       </View>
+
       <View style={styles.actions}>
-        <TouchableOpacity onPress={onEdit}>
-          <Ionicons name="pencil" size={20} color="#167ec5" />
+        <TouchableOpacity onPress={onEdit} style={styles.actionButton}>
+          <Ionicons name="pencil" size={18} color="#167ec5" />
+          <Text style={styles.editText}>Editar</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={onDelete}>
-          <Ionicons name="trash" size={20} color="red" />
+        <TouchableOpacity onPress={onDelete} style={styles.actionButton}>
+          <Ionicons name="trash" size={18} color="red" />
+          <Text style={styles.deleteText}>Excluir</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -88,31 +77,69 @@ export default function CategoryItem({
 }
 
 const styles = StyleSheet.create({
-  item: {
-    backgroundColor: "#f2f2f2",
+  card: {
+    backgroundColor: "#f9f9f9",
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 12,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    elevation: 1,
   },
-  categoryTag: {
-    alignSelf: "flex-start",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-    borderWidth: 1.5,
-    marginRight: 4,
+  leftSection: {
+    flex: 1,
+    paddingRight: 12,
   },
-  categoryTagText: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  actions: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+    marginBottom: 6,
+  },
+  colorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  progressBarBackground: {
+    height: 8,
+    backgroundColor: "#e0e0e0",
+    borderRadius: 6,
+    overflow: "hidden",
+    marginTop: 8,
+  },
+  progressBarFill: {
+    height: "100%",
+    borderRadius: 6,
+  },
+  spentText: {
+    fontSize: 14,
+    marginTop: 4,
+    color: "#555",
+  },
+  actions: {
+    justifyContent: "space-around",
+    alignItems: "flex-end",
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginVertical: 12,
+    marginLeft: 8,
+  },
+  editText: {
+    color: "#167ec5",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  deleteText: {
+    color: "red",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

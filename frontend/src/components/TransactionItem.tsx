@@ -2,19 +2,6 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-function darkenColor(hex: string, amount = 0.2) {
-  // hex: #RRGGBB
-  let c = hex.replace("#", "");
-  if (c.length === 3) c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
-  const num = parseInt(c, 16);
-  let r = Math.max(0, ((num >> 16) & 0xff) * (1 - amount));
-  let g = Math.max(0, ((num >> 8) & 0xff) * (1 - amount));
-  let b = Math.max(0, (num & 0xff) * (1 - amount));
-  return `#${[r, g, b]
-    .map((x) => Math.round(x).toString(16).padStart(2, "0"))
-    .join("")}`;
-}
-
 interface Props {
   description: string;
   value: string;
@@ -32,45 +19,39 @@ export default function TransactionItem({
   type,
   date,
   category,
-  categoryColor = "#e0e0e0",
+  categoryColor = "#ccc",
   onEdit,
   onDelete,
 }: Props) {
-  // Define a cor do valor com base no tipo
   const valueColor =
     type === "Despesa" ? "#e53935" : type === "Receita" ? "#43a047" : "#555";
-  const tagBgColor = categoryColor;
-  const tagBorderColor = darkenColor(categoryColor, 0.6);
-  const tagTextColor = tagBorderColor;
+
   return (
-    <View style={styles.card}>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.itemTitle}>{description}</Text>
-        <Text
-          style={[styles.details, { color: valueColor, fontWeight: "bold" }]}
-        >
-          {value}
-        </Text>
-        <Text style={styles.details}>{date}</Text>
+    <View style={styles.container}>
+      <View style={styles.leftSection}>
+        <View style={styles.header}>
+          <View style={[styles.colorDot, { backgroundColor: categoryColor }]} />
+          <Text style={styles.title}>{description}</Text>
+        </View>
+
+        <Text style={[styles.value, { color: valueColor }]}>{value}</Text>
+        <Text style={styles.date}>{date}</Text>
+
         {category && (
-          <View
-            style={[
-              styles.categoryTag,
-              { backgroundColor: tagBgColor, borderColor: tagBorderColor },
-            ]}
-          >
-            <Text style={[styles.categoryTagText, { color: tagTextColor }]}>
-              {category}
-            </Text>
-          </View>
+          <Text style={[styles.categoryText, { color: categoryColor }]}>
+            {category}
+          </Text>
         )}
       </View>
+
       <View style={styles.actions}>
-        <TouchableOpacity onPress={onEdit}>
-          <Ionicons name="pencil" size={20} color="#167ec5" />
+        <TouchableOpacity onPress={onEdit} style={styles.actionButton}>
+          <Ionicons name="pencil" size={18} color="#167ec5" />
+          <Text style={styles.editText}>Editar</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={onDelete}>
-          <Ionicons name="trash" size={20} color="red" />
+        <TouchableOpacity onPress={onDelete} style={styles.actionButton}>
+          <Ionicons name="trash" size={18} color="red" />
+          <Text style={styles.deleteText}>Excluir</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -78,39 +59,66 @@ export default function TransactionItem({
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#f9f9f9",
+  container: {
+    backgroundColor: "#f4f7fa",
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 12,
     flexDirection: "row",
     justifyContent: "space-between",
     elevation: 1,
   },
-  itemTitle: {
-    fontWeight: "bold",
-    fontSize: 16,
+  leftSection: {
+    flex: 1,
+    paddingRight: 12,
   },
-  details: {
-    color: "#555",
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  colorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  value: {
+    fontSize: 16,
+    fontWeight: "bold",
     marginTop: 2,
   },
-  categoryTag: {
-    alignSelf: "flex-start",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-    marginTop: 6,
-    borderWidth: 1.5,
+  date: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 2,
   },
-  categoryTagText: {
-    fontSize: 13,
+  categoryText: {
+    marginTop: 6,
     fontWeight: "600",
+    fontSize: 14,
   },
   actions: {
-    justifyContent: "space-between",
+    justifyContent: "space-around",
+    alignItems: "flex-end",
+  },
+  actionButton: {
+    flexDirection: "row",
     alignItems: "center",
-    marginLeft: 12,
+    gap: 4,
+  },
+  editText: {
+    color: "#167ec5",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  deleteText: {
+    color: "red",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
